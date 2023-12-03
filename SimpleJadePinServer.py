@@ -152,17 +152,19 @@ class MyServer(BaseHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(bytes('{"id":"0","method":"handshake_complete","params":{"encrypted_key":"' + bytes2hex(encrypted_key) + '","hmac":"' + bytes2hex(hmac) + '"}}', "utf-8"))
-        elif request.path == "/qrcode.min.js" or request.path == "/":
+        elif request.path == "/qrcode.min.js":
+            self.send_response(200)
+            self.send_header("Content-type", "text/javascript")
+            self.end_headers()
+
+            with open("qrcode.min.js", "r") as file:
+                self.wfile.write(bytes(file.read(), "utf-8"))
+        elif request.path == "/":
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
 
-            if request.path == "/":
-                file_name = "index.html"
-            else:
-                file_name = "qrcode.min.js"
-
-            with open(file_name, "r") as file:
+            with open("index.html", "r") as file:
                 self.wfile.write(bytes(file.read(), "utf-8"))
         else:
             self.send_response(404)
