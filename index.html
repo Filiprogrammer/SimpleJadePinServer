@@ -585,12 +585,13 @@
                             }
 
                             if (done) {
-                                handshake_reply_done();
                                 scanner.clear();
+                                handshake_reply_done();
                             }
                         } else if (result_split.length == 2) {
                             bcur3_fragments = [result];
                             scanner.clear();
+                            handshake_reply_done();
                         }
                     }
                 }
