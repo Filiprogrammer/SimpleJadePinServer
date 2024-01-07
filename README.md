@@ -6,12 +6,27 @@ A simple reimplementation of the [blind_pin_server](https://github.com/Blockstre
 Running SimpleJadePinServer
 ---------------------------
 
+### Prerequisites
+
 ```console
 apt update
 apt install python3 python3-pip python3-venv
 python3 -m venv venv
 source venv/bin/activate
 pip install wallycore
+```
+
+### Get an SSL/TLS certificate
+
+Or generate a self signed certificate
+
+```console
+openssl req -new -x509 -keyout server.pem -out server.pem -days 3650 -nodes
+```
+
+### Start SimpleJadePinServer.py
+
+```console
 python3 SimpleJadePinServer.py
 ```
 
