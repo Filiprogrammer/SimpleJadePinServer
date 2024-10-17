@@ -1,7 +1,7 @@
 <html>
     <head>
         <title>SimpleJadePinServer</title>
-        <script src="qrcode.min.js"></script>
+        <script src="qrcode.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" integrity="sha512-r6rDA7W6ZeQhvl8S7yRVQUKVHdexq+GAlNkNNqVC7YyIV+NwqCTJe2hDWCiffTyRNOeGEzRRJ9ifvRm/HCzGYg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script>
             class BufferReader {
@@ -500,7 +500,13 @@
                 return cbor_decode(reader);
             }
 
-            var qrcode2;
+            function render_alphanumeric_qrcode(element_id, data) {
+                let qr = qrcode(0, 'L');
+                qr.addData(data.toUpperCase(), 'Alphanumeric');
+                qr.make();
+                document.getElementById(element_id).innerHTML = qr.createImgTag(4);
+            }
+
             var qrcode2_interval;
             var bcur2_fragments;
             var bcur2_index = 1;
@@ -527,20 +533,14 @@
                         }
                     });
 
-                    if (typeof qrcode2 === 'undefined') {
-                        qrcode2 = new QRCode(document.getElementById("qrcode2"), bcur2_fragments[0]);
-                    } else {
-                        qrcode2.clear();
-                        qrcode2.makeCode(bcur2_fragments[0]);
-                    }
+                    render_alphanumeric_qrcode("qrcode2", bcur2_fragments[0]);
 
                     qrcode2_interval = setInterval(function() {
                         if (bcur2_index >= bcur2_fragments.length) {
                             bcur2_index = 0;
                         }
 
-                        qrcode2.clear();
-                        qrcode2.makeCode(bcur2_fragments[bcur2_index]);
+                        render_alphanumeric_qrcode("qrcode2", bcur2_fragments[bcur2_index]);
                         bcur2_index++;
                     }, 1000);
                 };
@@ -615,7 +615,6 @@
                 document.getElementById("get_pin").disabled = false;
             }
 
-            var qrcode4;
             var qrcode4_interval;
             var bcur4_fragments;
             var bcur4_index = 1;
@@ -643,20 +642,14 @@
                         }
                     });
 
-                    if (typeof qrcode4 === 'undefined') {
-                        qrcode4 = new QRCode(document.getElementById("qrcode4"), bcur4_fragments[0]);
-                    } else {
-                        qrcode4.clear();
-                        qrcode4.makeCode(bcur4_fragments[0]);
-                    }
+                    render_alphanumeric_qrcode("qrcode4", bcur4_fragments[0]);
 
                     qrcode4_interval = setInterval(function() {
                         if (bcur4_index >= bcur4_fragments.length) {
                             bcur4_index = 0;
                         }
 
-                        qrcode4.clear();
-                        qrcode4.makeCode(bcur4_fragments[bcur4_index]);
+                        render_alphanumeric_qrcode("qrcode4", bcur4_fragments[bcur4_index]);
                         bcur4_index++;
                     }, 1000);
                 };
@@ -687,20 +680,14 @@
                         }
                     });
 
-                    if (typeof qrcode4 === 'undefined') {
-                        qrcode4 = new QRCode(document.getElementById("qrcode4"), bcur4_fragments[0]);
-                    } else {
-                        qrcode4.clear();
-                        qrcode4.makeCode(bcur4_fragments[0]);
-                    }
+                    render_alphanumeric_qrcode("qrcode4", bcur4_fragments[0]);
 
                     qrcode4_interval = setInterval(function() {
                         if (bcur4_index >= bcur4_fragments.length) {
                             bcur4_index = 0;
                         }
 
-                        qrcode4.clear();
-                        qrcode4.makeCode(bcur4_fragments[bcur4_index]);
+                        render_alphanumeric_qrcode("qrcode4", bcur4_fragments[bcur4_index]);
                         bcur4_index++;
                     }, 1000);
                 };
