@@ -166,6 +166,15 @@ class MyServer(BaseHTTPRequestHandler):
 
             with open("index.html", "r") as file:
                 self.wfile.write(bytes(file.read(), "utf-8"))
+        elif request.path == "/oracle_qr.html":
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+
+            with open("oracle_qr.html", "r") as file:
+                file_contents = file.read()
+                file_contents = file_contents.replace("{STATIC_SERVER_PUBLIC_KEY}", bytes2hex(STATIC_SERVER_PUBLIC_KEY))
+                self.wfile.write(bytes(file_contents, "utf-8"))
         else:
             self.send_response(404)
             self.send_header("Content-type", "text/html")

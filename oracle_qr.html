@@ -1,0 +1,320 @@
+<html>
+    <head>
+        <title>Jade pin server QR generator</title>
+        <script src="qrcode.js"></script>
+        <script>
+            class BufferWriter {
+                constructor() {
+                    this.buffer = new Uint8Array(0);
+                }
+
+                writeByte(value) {
+                    let new_buffer = new Uint8Array(this.buffer.length + 1);
+                    new_buffer.set(this.buffer);
+                    new_buffer[this.buffer.length] = value & 0xFF;
+                    this.buffer = new_buffer;
+                }
+
+                writeUint16(value) {
+                    let new_buffer = new Uint8Array(this.buffer.length + 2);
+                    new_buffer.set(this.buffer);
+                    new_buffer[this.buffer.length] = (value >> 8) & 0xFF;
+                    new_buffer[this.buffer.length + 1] = value & 0xFF;
+                    this.buffer = new_buffer;
+                }
+
+                writeUint32(value) {
+                    let new_buffer = new Uint8Array(this.buffer.length + 4);
+                    new_buffer.set(this.buffer);
+                    new_buffer[this.buffer.length] = (value >> 24) & 0xFF;
+                    new_buffer[this.buffer.length + 1] = (value >> 16) & 0xFF;
+                    new_buffer[this.buffer.length + 2] = (value >> 8) & 0xFF;
+                    new_buffer[this.buffer.length + 3] = value & 0xFF;
+                    this.buffer = new_buffer;
+                }
+
+                writeUint64(value) {
+                    let new_buffer = new Uint8Array(this.buffer.length + 8);
+                    new_buffer.set(this.buffer);
+                    new_buffer[this.buffer.length] = (value >> 56) & 0xFF;
+                    new_buffer[this.buffer.length + 1] = (value >> 48) & 0xFF;
+                    new_buffer[this.buffer.length + 2] = (value >> 40) & 0xFF;
+                    new_buffer[this.buffer.length + 3] = (value >> 32) & 0xFF;
+                    new_buffer[this.buffer.length + 4] = (value >> 24) & 0xFF;
+                    new_buffer[this.buffer.length + 5] = (value >> 16) & 0xFF;
+                    new_buffer[this.buffer.length + 6] = (value >> 8) & 0xFF;
+                    new_buffer[this.buffer.length + 7] = value & 0xFF;
+                    this.buffer = new_buffer;
+                }
+
+                writeChunk(chunk) {
+                    let new_buffer = new Uint8Array(this.buffer.length + chunk.length);
+                    new_buffer.set(this.buffer);
+
+                    for (let i = 0; i < chunk.length; ++i) {
+                        new_buffer[this.buffer.length + i] = chunk[i];
+                    }
+
+                    this.buffer = new_buffer;
+                }
+
+                writeString(str) {
+                    let new_buffer = new Uint8Array(this.buffer.length + str.length);
+                    new_buffer.set(this.buffer);
+
+                    for (let i = 0; i < str.length; ++i) {
+                        new_buffer[this.buffer.length + i] = str.charCodeAt(i);
+                    }
+
+                    this.buffer = new_buffer;
+                }
+
+                getBuffer() {
+                    return this.buffer;
+                }
+            }
+
+            const CborType = {
+                Uint: 0,
+                Bytes: 2,
+                String: 3,
+                Array: 4,
+                Object: 5
+            };
+
+            function cbor_encode_string(data) {
+                let buffer_writer = new BufferWriter();
+                buffer_writer.writeByte((3 << 5) | Math.min(data.length, 24));
+
+                if (data.length >= 24) {
+                    buffer_writer.writeByte(data.length);
+                }
+
+                buffer_writer.writeString(data);
+
+                return buffer_writer.getBuffer();
+            }
+
+            function cbor_encode_bytes(data) {
+                let buffer_writer = new BufferWriter();
+                buffer_writer.writeByte((2 << 5) | Math.min(data.length, 24));
+
+                if (data.length >= 24) {
+                    buffer_writer.writeByte(data.length);
+                }
+
+                buffer_writer.writeChunk(data);
+
+                return buffer_writer.getBuffer();
+            }
+
+            function cbor_encode_uint(data) {
+                let buffer_writer = new BufferWriter();
+
+                if (data < 24) {
+                    buffer_writer.writeByte(data);
+                } else if (data < 256) {
+                    buffer_writer.writeByte(24);
+                    buffer_writer.writeByte(data);
+                } else if (data < 65536) {
+                    buffer_writer.writeByte(25);
+                    buffer_writer.writeUint16(data);
+                } else if (data < 4294967296) {
+                    buffer_writer.writeByte(26);
+                    buffer_writer.writeUint32(data);
+                } else {
+                    buffer_writer.writeByte(27);
+                    buffer_writer.writeUint64(data);
+                }
+
+                return buffer_writer.getBuffer();
+            }
+
+            function growUint8Array(originalArray, additionalSize) {
+                let newSize = originalArray.length + additionalSize;
+                let newArray = new Uint8Array(newSize);
+                newArray.set(originalArray);
+                return newArray;
+            }
+
+            function cbor_encode_array(data) {
+                let buffer_writer = new BufferWriter();
+                buffer_writer.writeByte((4 << 5) | Math.min(data.length, 24));
+
+                if (data.length >= 24) {
+                    buffer_writer.writeByte(data.length);
+                }
+
+                for (let i = 0; i < data.length; ++i) {
+                    let item;
+
+                    if (typeof data[i] == "number") {
+                        item = cbor_encode_uint(data[i]);
+                    } else if (data[i].constructor == Uint8Array) {
+                        item = cbor_encode_bytes(data[i]);
+                    }
+
+                    buffer_writer.writeChunk(item);
+                }
+
+                return buffer_writer.getBuffer();
+            }
+
+            function cbor_encode_object(data) {
+                let buffer_writer = new BufferWriter();
+                let keys = Object.keys(data);
+                buffer_writer.writeByte((5 << 5) | Math.min(keys.length, 24));
+
+                if (keys.length >= 24) {
+                    buffer_writer.writeByte(keys.length);
+                }
+
+                for (let i = 0; i < keys.length; ++i) {
+                    let item;
+
+                    // Key
+                    if (typeof keys[i] == "number") {
+                        item = cbor_encode_uint(keys[i]);
+                    } else if (typeof keys[i] == "string") {
+                        item = cbor_encode_string(keys[i]);
+                    } else if (keys[i].constructor == Uint8Array) {
+                        item = cbor_encode_bytes(keys[i]);
+                    }
+
+                    buffer_writer.writeChunk(item);
+
+                    // Value
+                    let value = data[keys[i]];
+
+                    if (typeof value == "number") {
+                        item = cbor_encode_uint(value);
+                    } else if (typeof value == "string") {
+                        item = cbor_encode_string(value);
+                    } else if (value.constructor == Uint8Array) {
+                        item = cbor_encode_bytes(value);
+                    } else {
+                        item = cbor_encode_object(value);
+                    }
+
+                    buffer_writer.writeChunk(item);
+                }
+
+                return buffer_writer.getBuffer();
+            }
+
+            function splitUint8Array(uInt8Array, length) {
+                const result = [];
+                const arrayLength = uInt8Array.length;
+
+                for (let i = 0; i < arrayLength; i += length) {
+                    const chunk = uInt8Array.subarray(i, i + length);
+                    result.push(chunk);
+                }
+
+                return result;
+            }
+
+            const fromHexString = (hexString) =>
+            Uint8Array.from(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
+
+            const toHexString = (bytes) =>
+            bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
+
+            const bytewords = 'ableacidalsoapexaquaarchatomauntawayaxisbackbaldbarnbeltbetabiasbluebodybragbrewbulbbuzzcalmcashcatschefcityclawcodecolacookcostcruxcurlcuspcyandarkdatadaysdelidicedietdoordowndrawdropdrumdulldutyeacheasyechoedgeepicevenexamexiteyesfactfairfernfigsfilmfishfizzflapflewfluxfoxyfreefrogfuelfundgalagamegeargemsgiftgirlglowgoodgraygrimgurugushgyrohalfhanghardhawkheathelphighhillholyhopehornhutsicedideaidleinchinkyintoirisironitemjadejazzjoinjoltjowljudojugsjumpjunkjurykeepkenokeptkeyskickkilnkingkitekiwiknoblamblavalazyleaflegsliarlimplionlistlogoloudloveluaulucklungmainmanymathmazememomenumeowmildmintmissmonknailnavyneednewsnextnoonnotenumbobeyoboeomitonyxopenovalowlspaidpartpeckplaypluspoempoolposepuffpumapurrquadquizraceramprealredorichroadrockroofrubyruinrunsrustsafesagascarsetssilkskewslotsoapsolosongstubsurfswantacotasktaxitenttiedtimetinytoiltombtoystriptunatwinuglyundouniturgeuservastveryvetovialvibeviewvisavoidvowswallwandwarmwaspwavewaxywebswhatwhenwhizwolfworkyankyawnyellyogayurtzapszerozestzinczonezoom';
+            var bytewordsLookUpTable = [];
+            const BYTEWORDS_NUM = 256;
+            const BYTEWORD_LENGTH = 4;
+            const MINIMAL_BYTEWORD_LENGTH = 2;
+
+            function getWord(index) {
+                return bytewords.slice(index * BYTEWORD_LENGTH, (index * BYTEWORD_LENGTH) + BYTEWORD_LENGTH)
+            }
+
+            function getMinimalWord(index) {
+                const byteword = getWord(index);
+
+                return byteword[0] + byteword[BYTEWORD_LENGTH - 1];
+            }
+
+            function makeCRCTable() {
+                let c;
+                let crcTable = [];
+
+                for (let n = 0; n < 256; n++) {
+                    c = n;
+                    for (let k = 0; k < 8; k++) {
+                        c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+                    }
+                    crcTable[n] = c;
+                }
+
+                return crcTable;
+            }
+
+            function crc32(str) {
+                let crcTable = window.crcTable || (window.crcTable = makeCRCTable());
+                let crc = 0 ^ (-1);
+
+                for (let i = 0; i < str.length; i++) {
+                    crc = (crc >>> 8) ^ crcTable[(crc ^ str[i]) & 0xFF];
+                }
+
+                return (crc ^ (-1)) >>> 0;
+            }
+
+            function bcur_encode_object(input) {
+                var ur = cbor_encode_object(input);
+                var result = "";
+
+                const word = toHexString(ur);
+                const crcAppendedWord = word + crc32(ur).toString(16).padStart(8, '0');
+                const crcWordBuff = fromHexString(crcAppendedWord);
+                const body = crcWordBuff.reduce((result, w) => result + getMinimalWord(w), '');
+                result = "ur:jade-updps/" + body;
+
+                return result;
+            }
+
+            var qrcode_result;
+
+            function generate() {
+                var urlA = document.getElementById("urla").value;
+                var urlB = document.getElementById("urlb").value;
+                var pubkey = document.getElementById("pubkey").value;
+
+                if (!pubkey) {
+                    alert("Please specify a pubkey");
+                    return;
+                }
+
+                pubkey = fromHexString(pubkey);
+
+                var bcur = bcur_encode_object({
+                    "id": "001",
+                    "method": "update_pinserver",
+                    "params": {
+                        "urlA": urlA,
+                        "urlB": urlB,
+                        "pubkey": pubkey
+                    }
+                }).toUpperCase();
+
+                var qr = qrcode(0, 'L');
+                qr.addData(bcur, 'Alphanumeric');
+                qr.make();
+                document.getElementById("generated_qrcode").innerHTML = qr.createImgTag(4);
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Jade pin server QR generator</h1>
+        <label for="urla">urlA</label>
+        <input type="text" id="urla" placeholder="http://taf3nizjnxuqxlg64t7ldtejs7qyevlwiuno4tjym4dtuhixyzhi27ad.onion:8096" size="64" value="http://127.0.0.1:4443" /><br>
+        <label for="urlb">urlB</label>
+        <input type="text" id="urlb" placeholder="http://maia:8096" size="64" /><br>
+        <label for="pubkey">pubkey (hex)</label>
+        <input type="text" id="pubkey" placeholder="023447839124dc14d6007774399f4dc10ab3596a70c8d75dd9bae9998453784877" size="66" value="{STATIC_SERVER_PUBLIC_KEY}" /><br>
+        <button onclick="generate()">Generate QR code</button>
+        <div id="generated_qrcode"></div>
+    </body>
+</html>
