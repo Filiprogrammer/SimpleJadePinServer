@@ -1,0 +1,8 @@
+services:
+  simple-jade-pin-server:
+    build:
+      context: .
+    ports:
+      - "4443:4443"
+    volumes:
+      - ./key_data:/app/key_data
