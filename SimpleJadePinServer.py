@@ -6,6 +6,8 @@ import urllib.parse
 import ssl
 
 port = 4443
+server_keys_path = "key_data/server_keys"
+pins_path = "key_data/pins"
 
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -191,11 +193,13 @@ def save_pin_fields(pin_pubkey_hash, hash_pin_secret, aes_key, pin_pubkey, count
     version_bytes = b'\x00'
     hmac_payload = wally.hmac_sha256(pin_auth_key, version_bytes + encrypted)
 
-    with open(bytes2hex(pin_pubkey_hash) + ".pin", "wb") as f:
+    os.makedirs(pins_path, exist_ok=True)
+
+    with open(pins_path + "/" + bytes2hex(pin_pubkey_hash) + ".pin", "wb") as f:
         f.write(version_bytes + hmac_payload + encrypted)
 
 def load_pin_fields(pin_pubkey_hash, pin_pubkey):
-    with open(bytes2hex(pin_pubkey_hash) + ".pin", "rb") as f:
+    with open(pins_path + "/" + bytes2hex(pin_pubkey_hash) + ".pin", "rb") as f:
         data = f.read()
 
     assert len(data) == 129
@@ -236,18 +240,22 @@ def generate_private_key():
     return private_key
 
 def get_static_server_key_pair():
-    if os.path.isfile("private.key"):
-        with open("private.key", "rb") as f:
+    os.makedirs(server_keys_path, exist_ok=True)
+    private_key_path = server_keys_path + "/private.key"
+    public_key_path = server_keys_path + "/public.key"
+
+    if os.path.isfile(private_key_path):
+        with open(private_key_path, "rb") as f:
             private_key = bytearray(f.read())
     else:
         private_key = generate_private_key()
 
-        with open("private.key", "wb") as f:
+        with open(private_key_path, "wb") as f:
             f.write(private_key)
 
     public_key = wally.ec_public_key_from_private_key(private_key)
 
-    with open("public.key", "wb") as f:
+    with open(public_key_path, "wb") as f:
         f.write(public_key)
 
     return private_key, public_key
