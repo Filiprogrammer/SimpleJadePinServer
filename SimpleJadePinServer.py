@@ -7,6 +7,7 @@ import os
 import wallycore as wally
 import urllib.parse
 import ssl
+import sys
 
 tls_cert_path = "key_data/server.pem"
 server_keys_path = "key_data/server_keys"
@@ -273,17 +274,35 @@ if __name__ == "__main__":
         type=int, default=4443,
         help="port number to listen on"
     )
+    parser.add_argument(
+        "--tls",
+        action=argparse.BooleanOptionalAction, default=True,
+        help="whether to use HTTPS (HTTP over TLS) for secure access, required by modern browsers "
+             "to enable webcam access on non-localhost connections. "
+             "Enabled by default; use --no-tls to disable."
+    )
     args = parser.parse_args()
 
     listen_ip = "0.0.0.0"
     server = HTTPServer((listen_ip, args.port), MyServer)
-    print(f"Server starting on https://{listen_ip}:{args.port}")
+
+    if args.tls:
+        if not os.path.isfile(tls_cert_path):
+            print(
+                f"TLS certificate not found at {tls_cert_path}. "
+                "Either provide a certificate or use --no-tls to disable TLS. "
+                "Note that TLS is required by modern browsers to enable webcam access on "
+                "non-localhost connections."
+            )
+            sys.exit(1)
+
+        server.socket = ssl.wrap_socket(server.socket, certfile=tls_cert_path, server_side=True)
+
+    print(f"Server starting on {'https' if args.tls else 'http'}://{listen_ip}:{args.port}")
 
     global STATIC_SERVER_PRIVATE_KEY, STATIC_SERVER_PUBLIC_KEY, STATIC_SERVER_AES_PIN_DATA
     STATIC_SERVER_PRIVATE_KEY, STATIC_SERVER_PUBLIC_KEY = get_static_server_key_pair()
     STATIC_SERVER_AES_PIN_DATA = wally.hmac_sha256(STATIC_SERVER_PRIVATE_KEY, b'pin_data')
-
-    server.socket = ssl.wrap_socket(server.socket, certfile=tls_cert_path, server_side=True)
 
     try:
         server.serve_forever()
