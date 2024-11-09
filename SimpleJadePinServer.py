@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from hashlib import sha256
 import os
