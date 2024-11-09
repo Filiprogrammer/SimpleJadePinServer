@@ -2,12 +2,12 @@
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from hashlib import sha256
+import argparse
 import os
 import wallycore as wally
 import urllib.parse
 import ssl
 
-port = 4443
 tls_cert_path = "key_data/server.pem"
 server_keys_path = "key_data/server_keys"
 pins_path = "key_data/pins"
@@ -264,8 +264,20 @@ def get_static_server_key_pair():
     return private_key, public_key
 
 if __name__ == "__main__":
-    server = HTTPServer(("0.0.0.0", port), MyServer)
-    print("Server started on https://0.0.0.0:" + str(port))
+    parser = argparse.ArgumentParser(
+        description="Simple reimplementation of the blind_pin_server for the Blockstream Jade, "
+                    "along with a basic web interface"
+    )
+    parser.add_argument(
+        "-p", "--port",
+        type=int, default=4443,
+        help="port number to listen on"
+    )
+    args = parser.parse_args()
+
+    listen_ip = "0.0.0.0"
+    server = HTTPServer((listen_ip, args.port), MyServer)
+    print(f"Server starting on https://{listen_ip}:{args.port}")
 
     global STATIC_SERVER_PRIVATE_KEY, STATIC_SERVER_PUBLIC_KEY, STATIC_SERVER_AES_PIN_DATA
     STATIC_SERVER_PRIVATE_KEY, STATIC_SERVER_PUBLIC_KEY = get_static_server_key_pair()
