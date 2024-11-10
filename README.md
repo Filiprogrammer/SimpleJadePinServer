@@ -28,11 +28,13 @@ openssl req -new -x509 -keyout server.pem -out server.pem -days 3650 -nodes
 cd ..
 ```
 
-### Or - Docker compose
+### To launch with `docker compose`
 
 ```console
 docker compose up
 ```
+
+The web interface will be available at http://127.0.0.1:18080
 
 ### Start SimpleJadePinServer.py
 
