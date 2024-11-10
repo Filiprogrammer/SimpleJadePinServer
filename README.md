@@ -33,7 +33,7 @@ cd ..
 python3 SimpleJadePinServer.py
 ```
 
-On first run, a static server key pair (`private.key` and `public.key`) will be generated in the working directory.
+On first run, a static server key pair (`private.key` and `public.key`) will be generated in the `key_data/server_keys` directory.
 
 The web interface will be available at https://127.0.0.1:4443
 
@@ -49,6 +49,8 @@ To point the Jade to the pin server, click the "Oracle QR code" link or navigate
 Click the "Generate QR code" button.
 
 Power on the Jade and access the boot menu by clicking (not holding) the select button once while the logo appears.
+- Note: Jade will need to be uninitialized in order to set a new blind oracle. If your Jade is already set up, you will need to perform a factory reset and **restore using your recovery phrase as your wallet will be deleted. Your funds will be lost if you do not have the correct backup materials.**
+  - Source: https://help.blockstream.com/hc/en-us/articles/12800132096793-Set-up-a-personal-blind-oracle
 
 ![Jade Boot Menu](docs/images/jade_boot_menu_blind_oracle.png)
 
