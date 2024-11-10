@@ -296,7 +296,9 @@ if __name__ == "__main__":
             )
             sys.exit(1)
 
-        server.socket = ssl.wrap_socket(server.socket, certfile=tls_cert_path, server_side=True)
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_context.load_cert_chain(certfile=tls_cert_path)
+        server.socket = ssl_context.wrap_socket(server.socket, server_side=True)
 
     print(f"Server starting on {'https' if args.tls else 'http'}://{listen_ip}:{args.port}")
 
