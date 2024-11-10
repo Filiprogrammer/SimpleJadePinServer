@@ -10,7 +10,7 @@ COPY . /app
 # Install dependencies
 RUN pip install wallycore
 
-# Generate a self-signed certificate (optional)
+# Generate a self-signed certificate; `server.pem` will be copied to the host on first run by `docker-entrypoint.sh`
 RUN openssl req -new -x509 -keyout server.pem -out server.pem -days 3650 -nodes -subj "/CN=localhost"
 
 # Copy the entrypoint script into the container
@@ -22,8 +22,5 @@ RUN chmod +x /app/docker-entrypoint.sh
 # Expose the required port
 EXPOSE 4443
 
-# Set the entrypoint to the script, then run the main application
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
-
-# Start the server
-CMD ["python3", "SimpleJadePinServer.py"]
+# Set the entrypoint to the main command, so additional args can be passed in docker-compose.yml
+ENTRYPOINT ["/app/docker-entrypoint.sh", "python3", "/app/SimpleJadePinServer.py"]

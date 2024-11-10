@@ -3,6 +3,7 @@ services:
     build:
       context: .
     ports:
-      - "4443:4443"
+      - "18080:4443"
     volumes:
       - ./key_data:/app/key_data
+    command: ["--no-tls"]
