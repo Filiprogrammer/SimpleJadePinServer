@@ -6,12 +6,24 @@ import argparse
 import os
 import wallycore as wally
 import urllib.parse
+import signal
 import ssl
 import sys
 
 tls_cert_path = "key_data/server.pem"
 server_keys_path = "key_data/server_keys"
 pins_path = "key_data/pins"
+
+class GracefulExitHandler:
+    def __init__(self, server):
+        self.server = server
+        signal.signal(signal.SIGTERM, self.graceful_shutdown)
+        signal.signal(signal.SIGINT, self.graceful_shutdown)
+
+    def graceful_shutdown(self, signum, frame):
+        self.server.server_close()
+        print("Server stopped")
+        sys.exit(0)
 
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -306,10 +318,5 @@ if __name__ == "__main__":
     STATIC_SERVER_PRIVATE_KEY, STATIC_SERVER_PUBLIC_KEY = get_static_server_key_pair()
     STATIC_SERVER_AES_PIN_DATA = wally.hmac_sha256(STATIC_SERVER_PRIVATE_KEY, b'pin_data')
 
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-
-    server.server_close()
-    print("Server stopped")
+    GracefulExitHandler(server)
+    server.serve_forever()
