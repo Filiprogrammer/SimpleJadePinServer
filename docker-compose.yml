@@ -1,5 +1,5 @@
 services:
-  simple-jade-pin-server:
+  simple_jade_pin_server:
     build: .
     ports:
       - "18080:4443"
