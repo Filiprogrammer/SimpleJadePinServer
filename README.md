@@ -29,6 +29,8 @@ cd ..
 
 ### To launch with `docker compose`
 
+Note that docker compose will only start the server on `localhost` without TLS and will serve under `http` - use a reverse proxy like Caddy or NGINX if you need to serve from a non-localhost address.
+
 ```console
 docker compose up
 ```
