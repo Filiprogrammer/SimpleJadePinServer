@@ -1,7 +1,6 @@
 services:
   simple-jade-pin-server:
-    build:
-      context: .
+    build: .
     ports:
       - "18080:4443"
     volumes:
