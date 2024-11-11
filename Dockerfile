@@ -1,26 +1,17 @@
 # Start with Python base image
-FROM python:3.9-slim
+FROM python:3.12-alpine
 
 # Set the working directory
 WORKDIR /app
 
 # Copy necessary files
-COPY . /app
+COPY SimpleJadePinServer.py index.html oracle_qr.html qrcode.js /app/
 
 # Install dependencies
-RUN pip install wallycore
-
-# Generate a self-signed certificate; `server.pem` will be copied to the host on first run by `docker-entrypoint.sh`
-RUN openssl req -new -x509 -keyout server.pem -out server.pem -days 3650 -nodes -subj "/CN=localhost"
-
-# Copy the entrypoint script into the container
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-
-# Make the script executable
-RUN chmod +x /app/docker-entrypoint.sh
+RUN pip install --no-cache-dir wallycore
 
 # Expose the required port
 EXPOSE 4443
 
 # Set the entrypoint to the main command, so additional args can be passed in docker-compose.yml
-ENTRYPOINT ["/app/docker-entrypoint.sh", "python3", "/app/SimpleJadePinServer.py"]
+ENTRYPOINT ["python3", "/app/SimpleJadePinServer.py"]
