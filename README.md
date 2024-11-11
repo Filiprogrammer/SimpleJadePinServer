@@ -20,7 +20,6 @@ pip install wallycore
 
 Or generate a self signed certificate
 
-
 ```console
 mkdir key_data
 cd key_data
