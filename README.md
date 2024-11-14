@@ -16,9 +16,11 @@ source venv/bin/activate
 pip install wallycore
 ```
 
-### Get an SSL/TLS certificate
+### Optional: Get an SSL/TLS certificate
 
-Or generate a self signed certificate
+To use the web interface from a non-localhost connection, an SSL/TLS certificate is needed. This is because modern web browsers require secure context (HTTPS or localhost) for the web interface to access the webcam, which is needed to scan the QR codes of the Jade.
+
+#### Example: Generate a self signed certificate
 
 ```console
 mkdir key_data
@@ -26,6 +28,12 @@ cd key_data
 openssl req -new -x509 -keyout server.pem -out server.pem -days 3650 -nodes
 cd ..
 ```
+
+This will create a certificate (`server.pem`) in the `key_data` directory.
+
+#### Alternative: Use a Reverse Proxy
+
+Alternatively a reverse proxy (such as Caddy or NGINX) can be used to serve the web interface over HTTPS.
 
 ### Start SimpleJadePinServer.py
 
@@ -36,6 +44,14 @@ python3 SimpleJadePinServer.py
 On first run, a static server key pair (`private.key` and `public.key`) will be generated in the `key_data/server_keys` directory.
 
 The web interface will be available at https://127.0.0.1:4443
+
+To disable TLS use the `--no-tls` option
+
+```console
+python3 SimpleJadePinServer.py --no-tls
+```
+
+The web interface will be available at http://127.0.0.1:4443
 
 ![SimpleJadePinServer web interface](docs/images/webui.png)
 
