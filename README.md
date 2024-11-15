@@ -16,9 +16,11 @@ source venv/bin/activate
 pip install wallycore
 ```
 
-### Get an SSL/TLS certificate
+### Optional: Get an SSL/TLS certificate
 
-Or generate a self signed certificate
+To use the web interface from a non-localhost connection, an SSL/TLS certificate is needed. This is because modern web browsers require secure context (HTTPS or localhost) for the web interface to access the webcam, which is needed to scan the QR codes of the Jade.
+
+#### Example: Generate a self signed certificate
 
 ```console
 mkdir key_data
@@ -27,15 +29,11 @@ openssl req -new -x509 -keyout server.pem -out server.pem -days 3650 -nodes
 cd ..
 ```
 
-### To launch with `docker compose`
+This will create a certificate (`server.pem`) in the `key_data` directory.
 
-Note that docker compose will only start the server on `localhost` without TLS and will serve under `http` - use a reverse proxy like Caddy or NGINX if you need to serve from a non-localhost address.
+#### Alternative: Use a Reverse Proxy
 
-```console
-docker compose up
-```
-
-The web interface will be available at http://127.0.0.1:18080
+Alternatively a reverse proxy (such as Caddy or NGINX) can be used to serve the web interface over HTTPS.
 
 ### Start SimpleJadePinServer.py
 
@@ -47,7 +45,28 @@ On first run, a static server key pair (`private.key` and `public.key`) will be 
 
 The web interface will be available at https://127.0.0.1:4443
 
+To disable TLS use the `--no-tls` option
+
+```console
+python3 SimpleJadePinServer.py --no-tls
+```
+
+The web interface will be available at http://127.0.0.1:4443
+
 ![SimpleJadePinServer web interface](docs/images/webui.png)
+
+Running SimpleJadePinServer with Docker Compose
+-----------------------------------------------
+
+Instead of manually installing the dependencies, SimpleJadePinServer can be launched in a Docker container using the provided `docker-compose.yml` file:
+
+```console
+docker compose up
+```
+
+The web interface will be available at http://127.0.0.1:18080
+
+Note that docker compose will start the server without TLS - use a reverse proxy like Caddy or NGINX if you need to serve from a non-localhost address.
 
 Pointing the Jade to the pin server
 -----------------------------------
