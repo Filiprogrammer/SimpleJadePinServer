@@ -1,0 +1,8 @@
+services:
+  simple_jade_pin_server:
+    build: .
+    ports:
+      - "18080:4443"
+    volumes:
+      - ./key_data:/app/key_data
+    command: ["--no-tls"]

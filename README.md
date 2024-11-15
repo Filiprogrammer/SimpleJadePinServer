@@ -55,6 +55,19 @@ The web interface will be available at http://127.0.0.1:4443
 
 ![SimpleJadePinServer web interface](docs/images/webui.png)
 
+Running SimpleJadePinServer with Docker Compose
+-----------------------------------------------
+
+Instead of manually installing the dependencies, SimpleJadePinServer can be launched in a Docker container using the provided `docker-compose.yml` file:
+
+```console
+docker compose up
+```
+
+The web interface will be available at http://127.0.0.1:18080
+
+Note that docker compose will start the server without TLS - use a reverse proxy like Caddy or NGINX if you need to serve from a non-localhost address.
+
 Pointing the Jade to the pin server
 -----------------------------------
 
