@@ -152,7 +152,7 @@ class MyServer(BaseHTTPRequestHandler):
                 print("Wrong pin (" + str(counter + 1) + ". attempt)")
 
                 if counter >= 2:
-                    os.remove(bytes2hex(pin_pubkey_hash) + ".pin")
+                    os.remove(pins_path + "/" + bytes2hex(pin_pubkey_hash) + ".pin")
                     print("Too many wrong attempts")
                 else:
                     save_pin_fields(pin_pubkey_hash, saved_hash_pin_secret, saved_key, pin_pubkey, counter + 1)
