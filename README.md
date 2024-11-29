@@ -3,6 +3,8 @@ SimpleJadePinServer
 
 A simple reimplementation of the [blind_pin_server](https://github.com/Blockstream/blind_pin_server) for the Blockstream Jade hardware wallet, along with a very basic web interface.
 
+Note: The newest version of `SimpleJadePinServer` requires Jade firmware that includes support for the shorter two-step blind oracle protocol, which was first implemented in version 1.0.28. If you need to use the old four-step protocol, you can revert to [v1](https://github.com/Filiprogrammer/SimpleJadePinServer/tree/v1).
+
 Running SimpleJadePinServer
 ---------------------------
 
@@ -91,7 +93,7 @@ Scan the the generated QR code and then confirm the details on screen.
 
 ![Jade Confirm Pin Server](docs/images/jade_confirm_pin_server.png)
 
-Note that it really does not matter where the URL is pointed to since the `SimpleJadePinServer` does not use the BCUR QR code from step 1/4. The only important parameter here is the public key of the pin server.
+Note that it really does not matter where the URL is pointed to. The only important parameter here is the public key of the pin server.
 
 <details>
 <summary>Alternative setup via USB</summary>
@@ -112,24 +114,26 @@ Using SimpleJadePinServer
 
 Once the Jade is configured to work with `SimpleJadePinServer`, initialize the wallet. When asked to select a connection, choose QR.
 
-1. After providing a six digit pin, the Jade will display Step 1/4 with a series of BC-UR QR codes. This step can be skipped.
+### Step 1/2
 
-2. The Jade will then display Step 2/4 and ask you to scan a BC-UR QR code. Make sure that `SimpleJadePinServer` is running and navigate to https://127.0.0.1:4443 in your web browser. Click the button labelled "Step 2/4 start_handshake". This will show a series of BC-UR QR codes you can scan with your Jade.
+After providing a six digit pin, the Jade will display Step 1/2 with a series of BC-UR QR codes. Click "Step 1/2 pin request - Jade &rarr; pin server" in the web interface. This will use the computer's camera to scan the QR codes displayed on the Jade.
 
-![Step 2/4](docs/images/webui_step2.png)
-
-3. Once scanning is complete, the Jade will proceed to Step 3/4 and show a series of BC-UR QR codes on its screen. Click "Step 3/4 start_handshake reply" in the web interface. This will use the computer's camera to scan the QR codes displayed on the Jade.
-
-![Step 3/4](docs/images/webui_step3.png)
+![Web UI Step 1/2](docs/images/webui_step1.png)
 
 Once it is done scanning, the camera interface will automatically disappear.
 
-4. Continue to Step 4/4 on the Jade and click "set_pin" in the web interface. This will show another series of BC-UR QR codes which can be scanned by the Jade.
+### Step 2/2
 
-![Step 4/4](docs/images/webui_step4.png)
+Next click the button labelled "Step 2/2 pin reply - pin server &rarr; Jade". This will show a series of BC-UR QR codes.
 
-Once that is scanned, you are done and the wallet is ready to be used.
+![Web UI Step 2/2](docs/images/webui_step2.png)
+
+On the Jade continue to Step 2/2 and scan the BC-UR QR codes.
+
+![Jade scanning Step 2/2](docs/images/jade_scanning_step2.png)
+
+Once scanning is complete, you are done and the wallet is ready to be used.
 
 ### Unlocking the wallet
 
-If you want to unlock the wallet at some later point, select "QR Mode" -> "QR PIN Unlock" on the Jade. Enter your PIN and perform the same steps as described before. The only difference being at step 4/4 where you will have to click "get_pin" instead of "set_pin" in the web interface.
+If you want to unlock the wallet at some later point, select "QR Mode" -> "QR PIN Unlock" on the Jade. Enter your PIN and perform the same steps as described before.
