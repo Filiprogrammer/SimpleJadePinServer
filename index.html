@@ -507,53 +507,12 @@
                 document.getElementById(element_id).innerHTML = qr.createImgTag(4);
             }
 
-            var qrcode2_interval;
-            var bcur2_fragments;
-            var bcur2_index = 1;
+            var bcur1_fragments;
 
-            function start_handshake() {
-                const xhttp = new XMLHttpRequest();
-                xhttp.onload = function() {
-                    var json_response = JSON.parse(this.responseText);
-                    var id = json_response.id;
-                    var sig = json_response.params.sig;
-                    var ske = json_response.params.ske;
-                    document.getElementById("handshake_init").innerHTML = "id: " + id + "<br>sig: " + sig + "<br>ske: " + ske;
+            function scan_pin_request() {
+                bcur1_fragments = null;
 
-                    if (typeof qrcode2_interval !== 'undefined') {
-                        clearInterval(qrcode2_interval);
-                    }
-
-                    bcur2_fragments = bcur_encode_object({
-                        "id": id,
-                        "method": "handshake_init",
-                        "params": {
-                            "sig": sig,
-                            "ske": ske
-                        }
-                    });
-
-                    render_alphanumeric_qrcode("qrcode2", bcur2_fragments[0]);
-
-                    qrcode2_interval = setInterval(function() {
-                        if (bcur2_index >= bcur2_fragments.length) {
-                            bcur2_index = 0;
-                        }
-
-                        render_alphanumeric_qrcode("qrcode2", bcur2_fragments[bcur2_index]);
-                        bcur2_index++;
-                    }, 1000);
-                };
-                xhttp.open("GET", "start_handshake");
-                xhttp.send();
-            }
-
-            var bcur3_fragments;
-
-            function handshake_reply() {
-                bcur3_fragments = null;
-
-                const scanner = new Html5QrcodeScanner('qrreader3', {
+                const scanner = new Html5QrcodeScanner('qrreader1', {
                     fps: 10,
                     formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
                     verbose: true
@@ -571,27 +530,27 @@
                             const seq = parseInt(seq_split[0]);
                             const numberOfFrags = parseInt(seq_split[1]);
 
-                            if (bcur3_fragments == null) {
-                                bcur3_fragments = Array(numberOfFrags).fill(null);
+                            if (bcur1_fragments == null) {
+                                bcur1_fragments = Array(numberOfFrags).fill(null);
                             }
 
-                            bcur3_fragments[seq - 1] = result;
+                            bcur1_fragments[seq - 1] = result;
                             var done = true;
 
                             for (var i = 0; i < numberOfFrags; ++i) {
-                                if (bcur3_fragments[i] == null) {
+                                if (bcur1_fragments[i] == null) {
                                     done = false;
                                 }
                             }
 
                             if (done) {
                                 scanner.clear();
-                                handshake_reply_done();
+                                scan_pin_request_done();
                             }
                         } else if (result_split.length == 2) {
-                            bcur3_fragments = [result];
+                            bcur1_fragments = [result];
                             scanner.clear();
-                            handshake_reply_done();
+                            scan_pin_request_done();
                         }
                     }
                 }
@@ -599,99 +558,90 @@
                 function error(err) {}
             }
 
-            var ske;
-            var cke;
-            var encrypted_data;
-            var hmac_encrypted_data;
+            var request_data;
 
-            function handshake_reply_done() {
-                let decoded_object = bcur_decode_object(bcur3_fragments);
-                ske = decoded_object["result"]["http_request"]["params"]["data"]["ske"];
-                cke = decoded_object["result"]["http_request"]["params"]["data"]["cke"];
-                encrypted_data = decoded_object["result"]["http_request"]["params"]["data"]["encrypted_data"];
-                hmac_encrypted_data = decoded_object["result"]["http_request"]["params"]["data"]["hmac_encrypted_data"];
-                document.getElementById("handshake_reply").innerHTML = "ske: " + ske + "<br>cke: " + cke + "<br>encrypted_data: " + encrypted_data + "<br>hmac_encrypted_data: " + hmac_encrypted_data;
-                document.getElementById("set_pin").disabled = false;
-                document.getElementById("get_pin").disabled = false;
+            function scan_pin_request_done() {
+                let decoded_object = bcur_decode_object(bcur1_fragments);
+                urls = decoded_object["result"]["http_request"]["params"]["urls"]
+                request_data = decoded_object["result"]["http_request"]["params"]["data"]["data"]
+                let pin_func = "get_pin";
+                if (urls[0].endsWith("set_pin") || urls[1].endsWith("set_pin")) {
+                    pin_func = "set_pin";
+                }
+                document.getElementById("pin_request").innerHTML = pin_func + "<br>data: " + request_data;
+                document.getElementById("btn_step2").setAttribute("onclick", pin_func + "()");
+                document.getElementById("btn_step2").disabled = false;
             }
 
-            var qrcode4_interval;
-            var bcur4_fragments;
-            var bcur4_index = 1;
+            var qrcode2_interval;
+            var bcur2_fragments;
+            var bcur2_index = 1;
 
             function set_pin() {
-                document.getElementById("get_pin").disabled = true;
                 const xhttp = new XMLHttpRequest();
                 xhttp.onload = function() {
                     let json_response = JSON.parse(this.responseText);
-                    let id = json_response.id;
-                    let encrypted_key = json_response.params.encrypted_key;
-                    let hmac = json_response.params.hmac;
-                    document.getElementById("handshake_complete").innerHTML = "id: " + id + "<br>encrypted_key: " + encrypted_key + "<br>hmac: " + hmac;
+                    let data = json_response.data;
+                    document.getElementById("pin_response").innerHTML = "data: " + data;
 
-                    if (typeof qrcode4_interval !== 'undefined') {
-                        clearInterval(qrcode4_interval);
+                    if (typeof qrcode2_interval !== 'undefined') {
+                        clearInterval(qrcode2_interval);
                     }
 
-                    bcur4_fragments = bcur_encode_object({
-                        "id": id,
-                        "method": "handshake_complete",
+                    bcur2_fragments = bcur_encode_object({
+                        "id": "0",
+                        "method": "pin",
                         "params": {
-                            "encrypted_key": encrypted_key,
-                            "hmac": hmac
+                            "data": data
                         }
                     });
 
-                    render_alphanumeric_qrcode("qrcode4", bcur4_fragments[0]);
+                    render_alphanumeric_qrcode("qrcode2", bcur2_fragments[0]);
 
-                    qrcode4_interval = setInterval(function() {
-                        if (bcur4_index >= bcur4_fragments.length) {
-                            bcur4_index = 0;
+                    qrcode2_interval = setInterval(function() {
+                        if (bcur2_index >= bcur2_fragments.length) {
+                            bcur2_index = 0;
                         }
 
-                        render_alphanumeric_qrcode("qrcode4", bcur4_fragments[bcur4_index]);
-                        bcur4_index++;
+                        render_alphanumeric_qrcode("qrcode2", bcur2_fragments[bcur2_index]);
+                        bcur2_index++;
                     }, 1000);
                 };
-                xhttp.open("GET", "set_pin?ske=" + ske + "&cke=" + cke + "&encrypted_data=" + encrypted_data + "&hmac_encrypted_data=" + hmac_encrypted_data);
+                xhttp.open("GET", "set_pin?data=" + request_data);
                 xhttp.send();
             }
 
             function get_pin() {
-                document.getElementById("set_pin").disabled = true;
                 const xhttp = new XMLHttpRequest();
                 xhttp.onload = function() {
                     let json_response = JSON.parse(this.responseText);
-                    let id = json_response.id;
-                    let encrypted_key = json_response.params.encrypted_key;
-                    let hmac = json_response.params.hmac;
-                    document.getElementById("handshake_complete").innerHTML = "id: " + id + "<br>encrypted_key: " + encrypted_key + "<br>hmac: " + hmac;
+                    let data = json_response.data;
+                    document.getElementById("pin_response").innerHTML = "data: " + data;
 
-                    if (typeof qrcode4_interval !== 'undefined') {
-                        clearInterval(qrcode4_interval);
+                    if (typeof qrcode2_interval !== 'undefined') {
+                        clearInterval(qrcode2_interval);
                     }
 
-                    bcur4_fragments = bcur_encode_object({
-                        "id": id,
-                        "method": "handshake_complete",
+                    bcur2_fragments = bcur_encode_object({
+                        "id": "0",
+                        "method": "pin",
                         "params": {
-                            "encrypted_key": encrypted_key,
-                            "hmac": hmac
+                            "data": data
                         }
                     });
 
-                    render_alphanumeric_qrcode("qrcode4", bcur4_fragments[0]);
+                    render_alphanumeric_qrcode("qrcode2", bcur2_fragments[0]);
 
-                    qrcode4_interval = setInterval(function() {
-                        if (bcur4_index >= bcur4_fragments.length) {
-                            bcur4_index = 0;
+                    qrcode2_interval = setInterval(function() {
+                        if (bcur2_index >= bcur2_fragments.length) {
+                            bcur2_index = 0;
                         }
 
-                        render_alphanumeric_qrcode("qrcode4", bcur4_fragments[bcur4_index]);
-                        bcur4_index++;
+                        render_alphanumeric_qrcode("qrcode2", bcur2_fragments[bcur2_index]);
+                        bcur2_index++;
                     }, 1000);
                 };
-                xhttp.open("GET", "get_pin?ske=" + ske + "&cke=" + cke + "&encrypted_data=" + encrypted_data + "&hmac_encrypted_data=" + hmac_encrypted_data);
+                xhttp.open("GET", "get_pin?data=" + request_data);
                 xhttp.send();
             }
         </script>
@@ -699,18 +649,17 @@
     <body>
         <h1>SimpleJadePinServer</h1>
         <a href="oracle_qr.html">Oracle QR code</a>
-        <p>Step 1/4 can be skipped</p>
-        <button onclick="start_handshake()">Step 2/4 start_handshake</button>
-        <p id="handshake_init">id: ?<br>sig: ?<br>ske: ?</p>
-        <div id="qrcode2"></div>
+        <p>
+            <button onclick="scan_pin_request()">Step 1/2 pin request - Jade &rarr; pin server</button>
+            <div id="qrreader1"></div>
+            <span id="pin_request">set/get pin: ?<br>data: ?</span>
+        </p>
 
-        <button onclick="handshake_reply()">Step 3/4 start_handshake reply</button>
-        <div id="qrreader3"></div>
-        <p id="handshake_reply">ske: ?<br>cke: ?<br>encrypted_data: ?<br>hmac_encrypted_data: ?</p>
-
-        <button id="set_pin" onclick="set_pin()" disabled>set_pin</button>
-        <button id="get_pin" onclick="get_pin()" disabled>get_pin</button>
-        <p id="handshake_complete">id: ?<br>encrypted_key: ?<br>hmac: ?</p>
-        <div id="qrcode4"></div>
+        <p>
+            <button id="btn_step2" disabled>Step 2/2 pin reply - pin server &rarr; Jade</button>
+            <br>
+            <span id="pin_response">data: ?</span>
+            <div id="qrcode2"></div>
+        </p>
     </body>
 </html>
