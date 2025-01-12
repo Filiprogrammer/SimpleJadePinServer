@@ -93,7 +93,7 @@ Scan the the generated QR code and then confirm the details on screen.
 
 ![Jade Confirm Pin Server](docs/images/jade_confirm_pin_server.png)
 
-Note that it really does not matter where the URL is pointed to. The only important parameter here is the public key of the pin server.
+Note that if the Jade is only ever meant to be used in QR mode, it does not matter where the URL is pointed to, making the public key of the pin server the only important parameter.
 
 <details>
 <summary>Alternative setup via USB</summary>
@@ -109,8 +109,8 @@ python3 set_jade_pinserver.py --serialport <ENTERJADESERIALPORT> --set-pubkey pa
 
 The Jade is now configured with the static server public key of the `SimpleJadePinServer`.
 
-Using SimpleJadePinServer
--------------------------
+Using SimpleJadePinServer in QR mode
+------------------------------------
 
 Once the Jade is configured to work with `SimpleJadePinServer`, initialize the wallet. When asked to select a connection, choose QR.
 
@@ -137,3 +137,14 @@ Once scanning is complete, you are done and the wallet is ready to be used.
 ### Unlocking the wallet
 
 If you want to unlock the wallet at some later point, select "QR Mode" -> "QR PIN Unlock" on the Jade. Enter your PIN and perform the same steps as described before.
+
+Using SimpleJadePinServer in USB or BLE mode
+--------------------------------------------
+
+Once the Jade has its blind oracle configured to point to `SimpleJadePinServer`, simply use the Jade with Blockstream Green as normal. Blockstream Green might complain the first time, that a non-default blind oracle is being used.
+
+![Blockstream Green non-default blind PIN oracle warning](docs/images/green_non_default_oracle_warning.png)
+
+This can be dismissed by first clicking on "Advanced", then enabling "Don't ask me again for this oracle" and finally clicking on "Allow Non-Default Connection".
+
+![Blockstream Green non-default blind PIN oracle warning - advanced view](docs/images/green_non_default_oracle_warning_advanced.png)

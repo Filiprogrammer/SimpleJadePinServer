@@ -607,8 +607,8 @@
                         bcur2_index++;
                     }, 1000);
                 };
-                xhttp.open("GET", "set_pin?data=" + request_data);
-                xhttp.send();
+                xhttp.open("POST", "set_pin");
+                xhttp.send('{"data": "' + request_data + '"}');
             }
 
             function get_pin() {
@@ -641,8 +641,8 @@
                         bcur2_index++;
                     }, 1000);
                 };
-                xhttp.open("GET", "get_pin?data=" + request_data);
-                xhttp.send();
+                xhttp.open("POST", "get_pin");
+                xhttp.send('{"data": "' + request_data + '"}');
             }
         </script>
     </head>

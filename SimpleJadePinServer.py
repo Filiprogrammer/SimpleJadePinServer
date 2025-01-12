@@ -10,6 +10,7 @@ import urllib.parse
 import signal
 import ssl
 import sys
+import json
 
 tls_cert_path = "key_data/server.pem"
 server_keys_path = "key_data/server_keys"
@@ -27,12 +28,18 @@ class GracefulExitHandler:
         sys.exit(0)
 
 class MyServer(BaseHTTPRequestHandler):
-    def do_GET(self):
+    def do_POST(self):
+        content_len = int(self.headers.get('Content-length', '0'))
+        post_body = self.rfile.read(content_len)
+        try:
+            params = json.loads(post_body)
+        except json.JSONDecodeError:
+            params = {}
+
         request = urllib.parse.urlparse(self.path)
 
         if request.path == "/set_pin":
             print("set_pin")
-            params = urllib.parse.parse_qs(request.query)
 
             if not 'data' in params:
                 self.send_response(400)
@@ -41,7 +48,7 @@ class MyServer(BaseHTTPRequestHandler):
                 self.wfile.write(bytes("<html><head><title>Bad request</title></head><body>Bad request</body></html>", "utf-8"))
                 return
 
-            data = base64.b64decode(params['data'][0].replace(' ', '+'))
+            data = base64.b64decode(params['data'])
             assert len(data) > 37
             cke = data[:33]
             replay_counter = data[33:37]
@@ -89,7 +96,6 @@ class MyServer(BaseHTTPRequestHandler):
             self.wfile.write(b'{"data":"' + base64.b64encode(encrypted_key) + b'"}')
         elif request.path == "/get_pin":
             print("get_pin")
-            params = urllib.parse.parse_qs(request.query)
 
             if not 'data' in params:
                 self.send_response(400)
@@ -98,7 +104,7 @@ class MyServer(BaseHTTPRequestHandler):
                 self.wfile.write(bytes("<html><head><title>Bad request</title></head><body>Bad request</body></html>", "utf-8"))
                 return
 
-            data = base64.b64decode(params['data'][0].replace(' ', '+'))
+            data = base64.b64decode(params['data'])
             assert len(data) > 37
             cke = data[:33]
             replay_counter = data[33:37]
@@ -154,7 +160,16 @@ class MyServer(BaseHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(b'{"data":"' + base64.b64encode(encrypted_key) + b'"}')
-        elif request.path == "/qrcode.js":
+        else:
+            self.send_response(404)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(bytes("<html><head><title>Not found</title></head><body>Not found</body></html>", "utf-8"))
+
+    def do_GET(self):
+        request = urllib.parse.urlparse(self.path)
+
+        if request.path == "/qrcode.js":
             self.send_response(200)
             self.send_header("Content-type", "text/javascript")
             self.end_headers()
