@@ -310,6 +310,9 @@
         <h1>Jade pin server QR generator</h1>
         <label for="urla">urlA</label>
         <input type="text" id="urla" placeholder="http://taf3nizjnxuqxlg64t7ldtejs7qyevlwiuno4tjym4dtuhixyzhi27ad.onion:8096" size="64" value="http://127.0.0.1:4443" /><br>
+        <script>
+            document.getElementById("urla").value = window.location.protocol + "//" + window.location.host;
+        </script>
         <label for="urlb">urlB</label>
         <input type="text" id="urlb" placeholder="http://maia:8096" size="64" /><br>
         <label for="pubkey">pubkey (hex)</label>
