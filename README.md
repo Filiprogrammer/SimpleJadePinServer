@@ -93,7 +93,7 @@ Scan the the generated QR code and then confirm the details on screen.
 
 ![Jade Confirm Pin Server](docs/images/jade_confirm_pin_server.png)
 
-Note that if the Jade is only ever meant to be used in QR mode, it does not matter where the URL is pointed to, making the public key of the pin server the only important parameter.
+Note that if the Jade is only ever meant to be used in QR mode, it does not matter where the URL is pointed to, making the public key of the pin server the only important parameter. However, for firmware updates via Green or the web portal (https://jadefw.blockstream.com/upgrade/fwupgrade.html), the URL must be correctly configured as the Jade cannot be unlocked in QR mode during the update process.
 
 <details>
 <summary>Alternative setup via USB</summary>
