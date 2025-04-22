@@ -138,6 +138,10 @@ Once scanning is complete, you are done and the wallet is ready to be used.
 
 If you want to unlock the wallet at some later point, select "QR Mode" -> "QR PIN Unlock" on the Jade. Enter your PIN and perform the same steps as described before.
 
+## QR Pin Unlock Support
+
+This implementation supports QR Pin Unlock, unlike Blockstream's version of the self-hosted blind oracle. This makes it the only self-hosted implementation that allows for the Jade hardware wallet to be used in an air-gapped way.
+
 Using SimpleJadePinServer in USB or BLE mode
 --------------------------------------------
 
