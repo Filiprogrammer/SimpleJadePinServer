@@ -3,6 +3,8 @@ SimpleJadePinServer
 
 A simple reimplementation of the [blind_pin_server](https://github.com/Blockstream/blind_pin_server) for the Blockstream Jade hardware wallet, along with a very basic web interface.
 
+This implementation supports QR Pin Unlock, unlike Blockstream's version of the self-hosted blind oracle. This makes it the only self-hosted implementation that allows the Jade hardware wallet to be used in an air-gapped way.
+
 Note: The newest version of `SimpleJadePinServer` requires Jade firmware that includes support for the shorter two-step blind oracle protocol, which was first implemented in version 1.0.28. If you need to use the old four-step protocol, you can revert to [v1](https://github.com/Filiprogrammer/SimpleJadePinServer/tree/v1).
 
 Running SimpleJadePinServer
