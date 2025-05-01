@@ -3,7 +3,10 @@ SimpleJadePinServer
 
 A simple reimplementation of the [blind_pin_server](https://github.com/Blockstream/blind_pin_server) for the Blockstream Jade hardware wallet, along with a very basic web interface.
 
-Note: The newest version of `SimpleJadePinServer` requires Jade firmware that includes support for the shorter two-step blind oracle protocol, which was first implemented in version 1.0.28. If you need to use the old four-step protocol, you can revert to [v1](https://github.com/Filiprogrammer/SimpleJadePinServer/tree/v1).
+This implementation supports QR Pin Unlock, unlike Blockstream's version of the self-hosted blind oracle. This makes it the only self-hosted implementation that allows the Jade hardware wallet to be used in an air-gapped way.
+
+> [!NOTE]
+> The newest version of `SimpleJadePinServer` requires Jade firmware that includes support for the shorter two-step blind oracle protocol, which was first implemented in version 1.0.28. If you need to use the old four-step protocol, you can revert to [v1](https://github.com/Filiprogrammer/SimpleJadePinServer/tree/v1).
 
 Running SimpleJadePinServer
 ---------------------------
@@ -68,7 +71,8 @@ docker compose up
 
 The web interface will be available at http://127.0.0.1:18080
 
-Note that docker compose will start the server without TLS - use a reverse proxy like Caddy or NGINX if you need to serve from a non-localhost address.
+> [!TIP]
+> Docker Compose will start the server without TLS - use a reverse proxy like Caddy or NGINX if you need to serve from a non-localhost address.
 
 Pointing the Jade to the pin server
 -----------------------------------
@@ -80,8 +84,11 @@ To point the Jade to the pin server, click the "Oracle QR code" link or navigate
 Click the "Generate QR code" button.
 
 Power on the Jade and access the boot menu by clicking (not holding) the select button once while the logo appears.
-- Note: Jade will need to be uninitialized in order to set a new blind oracle. If your Jade is already set up, you will need to perform a factory reset and **restore using your recovery phrase as your wallet will be deleted. Your funds will be lost if you do not have the correct backup materials.**
-  - Source: https://help.blockstream.com/hc/en-us/articles/12800132096793-Set-up-a-personal-blind-oracle
+
+> [!IMPORTANT]
+> Jade will need to be uninitialized in order to set a new blind oracle. If your Jade is already set up, you will need to perform a factory reset and **restore using your recovery phrase as your wallet will be deleted. Your funds will be lost if you do not have the correct backup materials.**
+>
+> Source: https://help.blockstream.com/hc/en-us/articles/12800132096793-Set-up-a-personal-blind-oracle
 
 ![Jade Boot Menu](docs/images/jade_boot_menu_blind_oracle.png)
 
@@ -93,7 +100,8 @@ Scan the the generated QR code and then confirm the details on screen.
 
 ![Jade Confirm Pin Server](docs/images/jade_confirm_pin_server.png)
 
-Note that if the Jade is only ever meant to be used in QR mode, it does not matter where the URL is pointed to, making the public key of the pin server the only important parameter. However, for firmware updates via Green or [the Web Portal](https://jadefw.blockstream.com/upgrade/fwupgrade.html), the URL must be correctly configured as the Jade cannot be unlocked in QR mode during the update process.
+> [!NOTE]
+> Note that if the Jade is only ever meant to be used in QR mode, it does not matter where the URL is pointed to, making the public key of the pin server the only important parameter. However, for firmware updates via Green or [the Web Portal](https://jadefw.blockstream.com/upgrade/fwupgrade.html), the URL must be correctly configured as the Jade cannot be unlocked in QR mode during the update process.
 
 <details>
 <summary>Alternative setup via USB</summary>
