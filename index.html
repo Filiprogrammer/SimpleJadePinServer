@@ -565,7 +565,7 @@
                 urls = decoded_object["result"]["http_request"]["params"]["urls"]
                 request_data = decoded_object["result"]["http_request"]["params"]["data"]["data"]
                 let pin_func = "get_pin";
-                if (urls[0].endsWith("set_pin") || urls[1].endsWith("set_pin")) {
+                if (urls.some(url => url.endsWith("set_pin"))) {
                     pin_func = "set_pin";
                 }
                 document.getElementById("pin_request").innerHTML = pin_func + "<br>data: " + request_data;
